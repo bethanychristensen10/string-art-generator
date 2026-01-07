@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>String Art Worksheet Generator</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+
+    .controls {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ===============================
+       1. CONTROLS (GENERATION INPUT)
+       =============================== -->
+  <div class="controls">
+    <label>
+      Offset:
+      <input type="number" id="offsetInput" value="4" min="1" max="16">
+    </label>
+    <button onclick="generate()">Generate Worksheet</button>
+  </div>
+
+  <!-- ===============================
+       2. CANVAS (LETTER SIZE)
+       =============================== -->
+  <canvas id="canvas" width="850" height="1100"></canvas>
+
+  <script>
+    /* ===============================
+       3. CANVAS SETUP
+       =============================== */
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    /* ===============================
+       4. GLOBAL LAYOUT SETTINGS
+       =============================== */
+    const nails = 32;
+    const centerX = canvas.width / 2;
+    const centerY = 350;
+    const radius = 250;
+
+    /* ===============================
+       5. MASTER GENERATOR FUNCTION
+       =============================== */
+    function generate() {
+      const offset = parseInt(document.getElementById("offsetInput").value);
+
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Create pattern based on offset
+      const pattern = [];
+      for (let i = 0; i < nails; i++) {
+        pattern.push([i, (i + offset) % nails]);
+      }
+
+      drawTitle(offset);
+      drawCircle();
+      drawPattern(pattern);
+      drawStepList(pattern);
+    }
+
+    /* ===============================
+       6. DRAW TITLE
+       =============================== */
+    function drawTitle(offset) {
+      ctx.font = "24px Arial";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "black";
+      ctx.fillText(
+        `String Art Pattern (Offset ${offset})`,
+        centerX,
+        60
+      );
+      ctx.textAlign = "left";
+    }
+
+    /* ===============================
+       7. DRAW NAILS + NUMBERS
+       =============================== */
+    function drawCircle() {
+      ctx.font = "12px Arial";
+      ctx.fillStyle = "black";
+
+      for (let i = 0; i < nails; i++) {
+        const angle = (2 * Math.PI / nails) * i;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        // Nail
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Number
+        ctx.fillText(i + 1, x + 6, y + 6);
+      }
+    }
+
+    /* ===============================
+       8. DRAW STRING LINES
+       =============================== */
+    function drawPattern(pattern) {
+      ctx.lineWidth = 1.25;
+      ctx.globalAlpha = 0.45;
+
+      pattern.forEach(pair => drawLine(pair[0], pair[1]));
+
+      ctx.globalAlpha = 1;
+    }
+
+    function drawLine(a, b) {
+      const angleA = (2 * Math.PI / nails) * a;
+      const angleB = (2 * Math.PI / nails) * b;
+
+      const x1 = centerX + radius * Math.cos(angleA);
+      const y1 = centerY + radius * Math.sin(angleA);
+      const x2 = centerX + radius * Math.cos(angleB);
+      const y2 = centerY + radius * Math.sin(angleB);
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    /* ===============================
+       9. DRAW STEP LIST (CENTERED)
+       =============================== */
+    function drawStepList(pattern) {
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "black";
+
+      const stepsStartY = 700;
+      const lineHeight = 22;
+      const columnGap = 80;
+      const columns = 2;
+
+      const stepsPerColumn = Math.ceil(pattern.length / columns);
+
+      // Measure widest text line
+      let maxTextWidth = 0;
+      pattern.forEach((pair, index) => {
+        const text = `${index + 1}. ${pair[0] + 1} -> ${pair[1] + 1}`;
+        const width = ctx.measureText(text).width;
+        if (width > maxTextWidth) maxTextWidth = width;
+      });
+
+      const totalListWidth = maxTextWidth * columns + columnGap;
+      const listStartX = centerX - totalListWidth / 2;
+
+      pattern.forEach((pair, index) => {
+        const column = Math.floor(index / stepsPerColumn);
+        const row = index % stepsPerColumn;
+
+        const x = listStartX + column * (maxTextWidth + columnGap);
+        const y = stepsStartY + row * lineHeight;
+
+        const stepText = `${index + 1}. ${pair[0] + 1} -> ${pair[1] + 1}`;
+        ctx.fillText(stepText, x, y);
+      });
+    }
+
+    /* ===============================
+       10. INITIAL GENERATION
+       =============================== */
+    generate();
+  </script>
+
+</body>
+</html>
